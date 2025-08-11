@@ -2,755 +2,700 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, Info, BarChart3, Activity, Zap, Eye, BookOpen } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { BookOpen, TrendingUp, BarChart3, Lightbulb, ArrowRight, Target, Zap, Heart, Brain } from "lucide-react"
 
 interface DetailedGraphGuideProps {
   onClose: () => void
 }
 
 export function DetailedGraphGuide({ onClose }: DetailedGraphGuideProps) {
-  const [activeExample, setActiveExample] = useState("balanced")
+  const [selectedExample, setSelectedExample] = useState("balanced")
 
-  const exampleScenarios = {
+  const examples = {
     balanced: {
       name: "Balanced State",
       emotions: { joy: 6, sadness: 2, anger: 1, fear: 3, surprise: 4, disgust: 1 },
-      description: "A healthy, balanced emotional state with moderate positive emotions",
-      insights: [
-        "Joy is dominant but not overwhelming",
-        "Negative emotions are present but manageable",
-        "Good emotional variety and balance",
-      ],
+      energy: 4.2,
+      stability: 0.85,
+      curvature: 0.23,
+      description: "A healthy, stable emotional state with moderate positive emotions and low negative emotions.",
     },
     stressed: {
       name: "High Stress",
-      emotions: { joy: 2, sadness: 6, anger: 7, fear: 8, surprise: 1, disgust: 4 },
-      description: "High stress state with elevated negative emotions",
-      insights: [
-        "Fear is dominant, indicating anxiety",
-        "Multiple negative emotions are elevated",
-        "Low joy suggests difficulty finding positivity",
-      ],
+      emotions: { joy: 2, sadness: 7, anger: 6, fear: 8, surprise: 2, disgust: 4 },
+      energy: 7.8,
+      stability: 0.15,
+      curvature: 0.89,
+      description: "Elevated negative emotions with high energy and low stability, indicating acute stress.",
     },
     excited: {
-      name: "High Energy",
-      emotions: { joy: 9, sadness: 1, anger: 0, fear: 2, surprise: 8, disgust: 0 },
-      description: "High positive energy with excitement and joy",
-      insights: [
-        "Very high joy and surprise",
-        "Minimal negative emotions",
-        "High energy but potentially unstable due to intensity",
-      ],
+      name: "Excited/Manic",
+      emotions: { joy: 9, sadness: 1, anger: 2, fear: 1, surprise: 8, disgust: 0 },
+      energy: 8.9,
+      stability: 0.45,
+      curvature: 0.67,
+      description:
+        "Very high positive emotions with elevated energy, potentially indicating mania or extreme excitement.",
     },
     depressed: {
-      name: "Low Mood",
-      emotions: { joy: 1, sadness: 8, anger: 2, fear: 5, surprise: 0, disgust: 3 },
-      description: "Depressive state with high sadness and low positive emotions",
-      insights: [
-        "Sadness is overwhelmingly dominant",
-        "Very low joy and surprise",
-        "Fear is also elevated, suggesting anxiety with depression",
-      ],
+      name: "Depressive Episode",
+      emotions: { joy: 1, sadness: 9, anger: 3, fear: 6, surprise: 0, disgust: 5 },
+      energy: 2.1,
+      stability: 0.25,
+      curvature: 0.78,
+      description: "Dominant sadness with very low energy and poor stability, characteristic of depression.",
     },
   }
 
-  const calculateExampleMetrics = (emotions: any) => {
-    const k = 1.2
-    const vectors = Object.values(emotions).map((v: any) => v * k)
-    const activeVectors = vectors.filter((v) => v > 0)
-    const mean = activeVectors.length > 0 ? activeVectors.reduce((a, b) => a + b, 0) / activeVectors.length : 0
-    const curvatures = vectors.map((v) => (v === 0 ? 0 : Math.abs(v - mean) / (mean + 0.01)))
-    const energy = vectors.reduce((sum, v) => sum + v * v, 0)
-    const stability = 1 / (Math.max(...curvatures) + 0.01)
-
-    return { vectors, curvatures, energy, stability, mean }
-  }
+  const currentExample = examples[selectedExample as keyof typeof examples]
 
   return (
-    <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-xl z-10 overflow-y-auto">
-      <Card className="m-4 bg-slate-800/90 border-slate-700 max-w-6xl mx-auto">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-slate-100">
-              <BookOpen className="h-5 w-5" />
-              Complete Graph Reading Guide
-            </CardTitle>
-            <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-slate-100">
-              <X className="h-4 w-4" />
-            </Button>
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
+            <BookOpen className="h-5 w-5 text-white" />
           </div>
-          <CardDescription className="text-slate-400">
-            Master the art of interpreting your emotional geometry visualizations with detailed examples
-          </CardDescription>
-        </CardHeader>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-100">Complete Graph Reading Guide</h2>
+            <p className="text-slate-400">Master the art of emotional geometry interpretation</p>
+          </div>
+        </div>
+        <Button variant="outline" onClick={onClose} className="border-slate-600 bg-transparent">
+          Close Guide
+        </Button>
+      </div>
 
-        <CardContent>
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-slate-700/50">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
-                <Info className="h-4 w-4 mr-1" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="radar" className="data-[state=active]:bg-purple-600">
-                <Activity className="h-4 w-4 mr-1" />
-                Radar Chart
-              </TabsTrigger>
-              <TabsTrigger value="curvature" className="data-[state=active]:bg-orange-600">
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Curvature
-              </TabsTrigger>
-              <TabsTrigger value="metrics" className="data-[state=active]:bg-green-600">
-                <Zap className="h-4 w-4 mr-1" />
-                Metrics
-              </TabsTrigger>
-              <TabsTrigger value="examples" className="data-[state=active]:bg-pink-600">
-                <Eye className="h-4 w-4 mr-1" />
-                Examples
-              </TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border-slate-700">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
+            <Brain className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="radar" className="data-[state=active]:bg-purple-600">
+            <Target className="h-4 w-4 mr-2" />
+            Radar Chart
+          </TabsTrigger>
+          <TabsTrigger value="curvature" className="data-[state=active]:bg-orange-600">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Curvature
+          </TabsTrigger>
+          <TabsTrigger value="metrics" className="data-[state=active]:bg-green-600">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Metrics
+          </TabsTrigger>
+          <TabsTrigger value="examples" className="data-[state=active]:bg-pink-600">
+            <Lightbulb className="h-4 w-4 mr-2" />
+            Examples
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-slate-100">Understanding Emotional Geometry</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-blue-400">Mathematical Foundation</h4>
-                    <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
-                      <p className="text-slate-300 text-sm">
-                        Your emotions are modeled as vectors in 6-dimensional space using differential geometry
-                        principles:
-                      </p>
-                      <ul className="space-y-2 text-sm text-slate-300">
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Vector Space:</strong> Each emotion exists as a point in mathematical space
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Magnitude:</strong> Represents the intensity of each emotion
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Curvature:</strong> Measures deviation from your emotional baseline
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Topology:</strong> How emotions relate to each other in space
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
+        <TabsContent value="overview" className="space-y-6 mt-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-100">
+                <Brain className="h-5 w-5 text-blue-400" />
+                Mathematical Foundation
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Understanding the core mathematics behind emotional geometry
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Emotion Vectors</h3>
+                  <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                    <p className="text-sm text-slate-300 mb-2">Each emotion is converted to a vector magnitude:</p>
+                    <code className="text-blue-400 text-sm">V(emotion) = √(intensity² + baseline²)</code>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Where intensity is your 0-10 rating and baseline represents emotional stability
+                    </p>
                   </div>
+                </div>
 
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-400">Key Formulas</h4>
-                    <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
-                      <div className="space-y-2">
-                        <div className="bg-blue-500/10 p-3 rounded border border-blue-500/20">
-                          <p className="text-blue-400 font-mono text-sm">|Eᵢ| = Iᵢ × k</p>
-                          <p className="text-xs text-slate-400 mt-1">Vector magnitude (k = 1.2)</p>
-                        </div>
-                        <div className="bg-orange-500/10 p-3 rounded border border-orange-500/20">
-                          <p className="text-orange-400 font-mono text-sm">κᵢ = |Eᵢ - Ē| / (Ē + ε)</p>
-                          <p className="text-xs text-slate-400 mt-1">Curvature (ε = 0.01)</p>
-                        </div>
-                        <div className="bg-purple-500/10 p-3 rounded border border-purple-500/20">
-                          <p className="text-purple-400 font-mono text-sm">Energy = Σ |Eᵢ|²</p>
-                          <p className="text-xs text-slate-400 mt-1">Total emotional energy</p>
-                        </div>
-                        <div className="bg-green-500/10 p-3 rounded border border-green-500/20">
-                          <p className="text-green-400 font-mono text-sm">S = 1 / (max(κᵢ) + ε)</p>
-                          <p className="text-xs text-slate-400 mt-1">Stability index</p>
-                        </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Curvature Calculation</h3>
+                  <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                    <p className="text-sm text-slate-300 mb-2">Emotional curvature measures rate of change:</p>
+                    <code className="text-purple-400 text-sm">κ = |V''(t)| / (1 + V'(t)²)^(3/2)</code>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Higher curvature indicates more volatile emotional transitions
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Energy Formula</h3>
+                  <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                    <p className="text-sm text-slate-300 mb-2">Total emotional energy:</p>
+                    <code className="text-orange-400 text-sm">E = Σ(V(emotion) × weight)</code>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Weighted sum of all emotion vectors, normalized to 0-10 scale
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Stability Index</h3>
+                  <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                    <p className="text-sm text-slate-300 mb-2">Emotional stability measure:</p>
+                    <code className="text-green-400 text-sm">S = 1 - (σ(curvatures) / max_curvature)</code>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Based on curvature variance; higher values indicate more stability
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-4 rounded-lg border border-blue-800/30">
+                <h4 className="font-semibold text-blue-300 mb-2">Key Concepts</h4>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Vector Magnitude:</strong> Represents the "strength" of each emotion in multidimensional
+                      space
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Curvature:</strong> Measures how quickly emotions change direction (volatility)
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Energy:</strong> Total emotional activation across all dimensions
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Stability:</strong> Consistency and predictability of emotional patterns
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="radar" className="space-y-6 mt-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-100">
+                <Target className="h-5 w-5 text-purple-400" />
+                Radar Chart Deep Dive
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Understanding the emotional radar visualization
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Reading the Radar</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Joy (Yellow)</p>
+                        <p className="text-sm text-slate-400">Positive emotions, happiness, contentment</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-blue-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Sadness (Blue)</p>
+                        <p className="text-sm text-slate-400">Grief, melancholy, disappointment</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-red-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Anger (Red)</p>
+                        <p className="text-sm text-slate-400">Frustration, irritation, rage</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-purple-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Fear (Purple)</p>
+                        <p className="text-sm text-slate-400">Anxiety, worry, apprehension</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-green-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Surprise (Green)</p>
+                        <p className="text-sm text-slate-400">Astonishment, wonder, shock</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-violet-400 mt-1.5"></div>
+                      <div>
+                        <p className="font-medium text-slate-200">Disgust (Violet)</p>
+                        <p className="text-sm text-slate-400">Revulsion, aversion, distaste</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-500/10 to-purple-600/10 border border-blue-500/20 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-blue-400 mb-3">Why This Matters</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-300">
-                    <div>
-                      <h5 className="font-semibold text-slate-200 mb-2">Objective Measurement</h5>
-                      <p>Transforms subjective feelings into measurable, comparable data points</p>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Shape Interpretation</h3>
+                  <div className="space-y-4">
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Circular/Balanced</h4>
+                      <p className="text-sm text-slate-400">
+                        Even distribution suggests emotional balance and stability. No single emotion dominates.
+                      </p>
                     </div>
-                    <div>
-                      <h5 className="font-semibold text-slate-200 mb-2">Pattern Recognition</h5>
-                      <p>Identifies emotional patterns and instabilities you might not notice</p>
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Spiked/Pointed</h4>
+                      <p className="text-sm text-slate-400">
+                        Sharp peaks indicate intense emotions. The direction shows which emotions are dominant.
+                      </p>
                     </div>
-                    <div>
-                      <h5 className="font-semibold text-slate-200 mb-2">Predictive Insights</h5>
-                      <p>Helps predict emotional volatility and suggests interventions</p>
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Compressed/Small</h4>
+                      <p className="text-sm text-slate-400">
+                        Small overall shape suggests emotional numbness or suppression across all dimensions.
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Asymmetrical</h4>
+                      <p className="text-sm text-slate-400">
+                        Uneven shapes indicate emotional imbalance, with some emotions significantly stronger than
+                        others.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </TabsContent>
 
-            <TabsContent value="radar" className="space-y-6 mt-6">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-slate-100">Radar Chart Deep Dive</h3>
+              <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 p-4 rounded-lg border border-purple-800/30">
+                <h4 className="font-semibold text-purple-300 mb-3">Pro Reading Tips</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
+                  <div>
+                    <p className="font-medium mb-1">Area Analysis:</p>
+                    <p>Larger total area = higher overall emotional intensity</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-1">Symmetry Check:</p>
+                    <p>Symmetrical shapes suggest emotional regulation</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-1">Peak Counting:</p>
+                    <p>Multiple peaks = complex emotional state</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-1">Center Distance:</p>
+                    <p>Points far from center = intense specific emotions</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-purple-400">Chart Components</h4>
-                    <div className="space-y-3">
-                      <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-lg">
-                        <h5 className="font-semibold text-purple-400 mb-2">Purple Line (Vector Magnitude)</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>• Shows your raw emotion × 1.2 scaling factor</li>
-                          <li>• Represents the mathematical "strength" of each emotion</li>
-                          <li>• Larger values = more intense emotional experience</li>
-                          <li>• Range: 0 to 12 (0-10 input × 1.2)</li>
-                        </ul>
-                      </div>
-
-                      <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg">
-                        <h5 className="font-semibold text-green-400 mb-2">Green Line (Raw Intensity)</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>• Your original 0-10 emotion ratings</li>
-                          <li>• Baseline for comparison with scaled values</li>
-                          <li>• Helps validate the mathematical transformation</li>
-                          <li>• Should always be inside or equal to purple line</li>
-                        </ul>
+        <TabsContent value="curvature" className="space-y-6 mt-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-100">
+                <TrendingUp className="h-5 w-5 text-orange-400" />
+                Curvature Analysis
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Understanding emotional volatility through curvature mathematics
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Curvature Ranges</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-green-900/20 border border-green-800/30 rounded-lg">
+                      <div className="w-4 h-4 rounded-full bg-green-400"></div>
+                      <div className="flex-1">
+                        <p className="font-medium text-green-300">Low (0.0 - 0.3)</p>
+                        <p className="text-sm text-slate-400">Stable, gradual emotional changes</p>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-blue-400">Reading Patterns</h4>
-                    <div className="space-y-3">
-                      <div className="bg-slate-700/30 p-4 rounded-lg">
-                        <h5 className="font-semibold text-slate-200 mb-2">Shape Analysis</h5>
-                        <div className="space-y-2 text-sm text-slate-300">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span>
-                              <strong>Circular/Balanced:</strong> Emotional equilibrium
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                            <span>
-                              <strong>Spiky:</strong> Intense, focused emotions
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span>
-                              <strong>Lopsided:</strong> Emotional imbalance
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <span>
-                              <strong>Large Area:</strong> High emotional energy
-                            </span>
-                          </div>
-                        </div>
+                    <div className="flex items-center gap-3 p-3 bg-yellow-900/20 border border-yellow-800/30 rounded-lg">
+                      <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                      <div className="flex-1">
+                        <p className="font-medium text-yellow-300">Moderate (0.3 - 0.6)</p>
+                        <p className="text-sm text-slate-400">Normal emotional fluctuations</p>
                       </div>
-
-                      <div className="bg-slate-700/30 p-4 rounded-lg">
-                        <h5 className="font-semibold text-slate-200 mb-2">Important Notes</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>• Only emotions with intensity &gt; 0 are shown</li>
-                          <li>• Empty areas don't mean "bad" - just not active</li>
-                          <li>• Compare purple vs green to see scaling effect</li>
-                          <li>• Focus on overall shape, not individual points</li>
-                        </ul>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-orange-900/20 border border-orange-800/30 rounded-lg">
+                      <div className="w-4 h-4 rounded-full bg-orange-400"></div>
+                      <div className="flex-1">
+                        <p className="font-medium text-orange-300">High (0.6 - 0.8)</p>
+                        <p className="text-sm text-slate-400">Significant emotional volatility</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-red-900/20 border border-red-800/30 rounded-lg">
+                      <div className="w-4 h-4 rounded-full bg-red-400"></div>
+                      <div className="flex-1">
+                        <p className="font-medium text-red-300">Critical (0.8 - 1.0)</p>
+                        <p className="text-sm text-slate-400">Extreme emotional instability</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-lg">
-                  <h4 className="font-semibold text-amber-400 mb-3">Pro Reading Tips</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
-                    <div>
-                      <h5 className="font-semibold text-slate-200 mb-2">What to Look For:</h5>
-                      <ul className="space-y-1">
-                        <li>• Which emotions dominate the shape?</li>
-                        <li>• Are positive and negative emotions balanced?</li>
-                        <li>• How large is the overall area?</li>
-                        <li>• Are there any surprising absences?</li>
-                      </ul>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">What Curvature Tells Us</h3>
+                  <div className="space-y-4">
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Emotional Transitions</h4>
+                      <p className="text-sm text-slate-400">
+                        High curvature indicates rapid emotional shifts - like going from joy to sadness quickly.
+                      </p>
                     </div>
-                    <div>
-                      <h5 className="font-semibold text-slate-200 mb-2">Common Patterns:</h5>
-                      <ul className="space-y-1">
-                        <li>
-                          • <strong>Stress:</strong> High fear, anger, low joy
-                        </li>
-                        <li>
-                          • <strong>Depression:</strong> High sadness, very low joy
-                        </li>
-                        <li>
-                          • <strong>Anxiety:</strong> High fear, moderate other emotions
-                        </li>
-                        <li>
-                          • <strong>Excitement:</strong> High joy, surprise, low negatives
-                        </li>
-                      </ul>
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Predictability</h4>
+                      <p className="text-sm text-slate-400">
+                        Low curvature suggests predictable emotional patterns, while high curvature indicates chaos.
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Regulation Ability</h4>
+                      <p className="text-sm text-slate-400">
+                        Consistent low curvature shows good emotional regulation skills.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </TabsContent>
 
-            <TabsContent value="curvature" className="space-y-6 mt-6">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-slate-100">Curvature Analysis Mastery</h3>
+              <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                <h4 className="font-medium text-slate-200 mb-3">Mathematical Insight</h4>
+                <p className="text-sm text-slate-400 mb-3">
+                  The curvature formula κ = |V''(t)| / (1 + V'(t)²)^(3/2) measures how much the emotional "path" bends
+                  at each point. Think of it like driving on a road:
+                </p>
+                <ul className="space-y-1 text-sm text-slate-400">
+                  <li>• Straight road = low curvature = stable emotions</li>
+                  <li>• Winding road = high curvature = volatile emotions</li>
+                  <li>• Sharp turns = curvature spikes = emotional crises</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <div className="bg-orange-500/10 border border-orange-500/20 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-orange-400 mb-4">What Is Curvature?</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <p className="text-slate-300">
-                        Curvature (κ) measures how much each emotion deviates from your personal emotional baseline.
-                        It's calculated by comparing each emotion's intensity to the average of all your active
-                        emotions.
-                      </p>
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <h5 className="font-semibold text-slate-200 mb-2">Step-by-Step Calculation:</h5>
-                        <ol className="space-y-1 text-sm text-slate-300">
-                          <li>1. Calculate vector magnitudes (intensity × 1.2)</li>
-                          <li>2. Find average of all active emotions</li>
-                          <li>3. For each emotion: |emotion - average| / (average + 0.01)</li>
-                          <li>4. Higher values = more deviation = more instability</li>
-                        </ol>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <h5 className="font-semibold text-slate-200 mb-2">Curvature Ranges:</h5>
+        <TabsContent value="metrics" className="space-y-6 mt-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-100">
+                <BarChart3 className="h-5 w-5 text-green-400" />
+                Energy & Stability Metrics
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Understanding the key numerical indicators of emotional state
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-yellow-400" />
+                    Emotional Energy
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Energy Scale (0-10)</h4>
                       <div className="space-y-2">
-                        <div className="bg-green-500/20 border border-green-500/30 p-3 rounded">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-green-400">0.0 - 0.3</span>
-                            <Badge variant="outline" className="border-green-500 text-green-400">
-                              Stable
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-slate-300 mt-1">Close to baseline, well-regulated</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0-2: Very Low</span>
+                          <Badge variant="secondary" className="bg-gray-700">
+                            Lethargy
+                          </Badge>
                         </div>
-                        <div className="bg-yellow-500/20 border border-yellow-500/30 p-3 rounded">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-yellow-400">0.3 - 0.8</span>
-                            <Badge variant="outline" className="border-yellow-500 text-yellow-400">
-                              Moderate
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-slate-300 mt-1">Some deviation, manageable turbulence</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">3-4: Low</span>
+                          <Badge variant="secondary" className="bg-blue-700">
+                            Calm
+                          </Badge>
                         </div>
-                        <div className="bg-red-500/20 border border-red-500/30 p-3 rounded">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-red-400">0.8+</span>
-                            <Badge variant="outline" className="border-red-500 text-red-400">
-                              High
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-slate-300 mt-1">Significant deviation, emotional instability</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">5-6: Moderate</span>
+                          <Badge variant="secondary" className="bg-green-700">
+                            Balanced
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">7-8: High</span>
+                          <Badge variant="secondary" className="bg-orange-700">
+                            Energetic
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">9-10: Very High</span>
+                          <Badge variant="secondary" className="bg-red-700">
+                            Intense
+                          </Badge>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-blue-400">Reading the Bar Chart</h4>
-                    <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
-                      <h5 className="font-semibold text-slate-200">Chart Features:</h5>
-                      <ul className="space-y-2 text-sm text-slate-300">
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Orange Bars:</strong> Height shows curvature value
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-slate-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>X-Axis:</strong> Only shows emotions with intensity &gt; 0
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Y-Axis:</strong> Curvature values (0 to ~2.0 typical)
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
-                          <span>
-                            <strong>Tooltip:</strong> Hover for exact curvature values
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg">
-                      <h5 className="font-semibold text-red-400 mb-2">Critical Insight</h5>
+                    <div className="bg-yellow-900/20 p-4 rounded-lg border border-yellow-800/30">
                       <p className="text-sm text-slate-300">
-                        Zero-intensity emotions don't appear because they have zero curvature by definition. The chart
-                        only shows emotions that are actively contributing to your emotional state.
+                        <strong>Energy Interpretation:</strong> High energy isn't always positive - it could indicate
+                        anxiety or mania. Low energy might suggest depression or fatigue.
                       </p>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-400">Interpretation Guide</h4>
-                    <div className="space-y-3">
-                      <div className="bg-slate-700/30 p-4 rounded-lg">
-                        <h5 className="font-semibold text-slate-200 mb-2">What High Curvature Means:</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>• That emotion is much stronger/weaker than your average</li>
-                          <li>• Indicates emotional imbalance or intensity</li>
-                          <li>• May suggest need for attention or regulation</li>
-                          <li>• Not necessarily "bad" - just notable deviation</li>
-                        </ul>
-                      </div>
-
-                      <div className="bg-slate-700/30 p-4 rounded-lg">
-                        <h5 className="font-semibold text-slate-200 mb-2">Common Patterns:</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>
-                            • <strong>All Low:</strong> Balanced emotional state
-                          </li>
-                          <li>
-                            • <strong>One High:</strong> Single emotion dominates
-                          </li>
-                          <li>
-                            • <strong>Multiple High:</strong> Emotional chaos/volatility
-                          </li>
-                          <li>
-                            • <strong>Negative High:</strong> Distress pattern
-                          </li>
-                        </ul>
-                      </div>
-
-                      <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
-                        <h5 className="font-semibold text-blue-400 mb-2">Action Items:</h5>
-                        <ul className="space-y-1 text-sm text-slate-300">
-                          <li>• Focus on emotions with highest curvature</li>
-                          <li>• Consider why that emotion is so different</li>
-                          <li>• Use targeted coping strategies</li>
-                          <li>• Monitor changes over time</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="metrics" className="space-y-6 mt-6">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-slate-100">Energy & Stability Metrics</h3>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-purple-400">Emotional Energy</h4>
-                    <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-lg space-y-3">
-                      <div className="bg-slate-700/50 p-3 rounded">
-                        <p className="font-mono text-purple-400 mb-2">Energy = Σ |Eᵢ|²</p>
-                        <p className="text-sm text-slate-300">Sum of squared emotion vector magnitudes</p>
-                      </div>
-
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-pink-400" />
+                    Stability Index
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-slate-800/70 p-4 rounded-lg border border-slate-600/50">
+                      <h4 className="font-medium text-slate-200 mb-2">Stability Scale (0-1)</h4>
                       <div className="space-y-2">
-                        <h5 className="font-semibold text-slate-200">Energy Ranges:</h5>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">0 - 50</span>
-                            <Badge variant="outline" className="border-blue-500 text-blue-400">
-                              Low
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">50 - 200</span>
-                            <Badge variant="outline" className="border-green-500 text-green-400">
-                              Moderate
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">200 - 500</span>
-                            <Badge variant="outline" className="border-yellow-500 text-yellow-400">
-                              High
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">500+</span>
-                            <Badge variant="outline" className="border-red-500 text-red-400">
-                              Very High
-                            </Badge>
-                          </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0.0-0.2: Critical</span>
+                          <Badge variant="destructive">Crisis</Badge>
                         </div>
-                      </div>
-
-                      <div className="bg-blue-500/10 p-3 rounded">
-                        <h5 className="font-semibold text-blue-400 mb-1">What It Means:</h5>
-                        <ul className="text-sm text-slate-300 space-y-1">
-                          <li>• Higher energy = more intense emotional experience</li>
-                          <li>• Can be positive (excitement) or negative (distress)</li>
-                          <li>• Very high energy may indicate need for regulation</li>
-                          <li>• Very low energy might suggest emotional numbness</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-400">Stability Index</h4>
-                    <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg space-y-3">
-                      <div className="bg-slate-700/50 p-3 rounded">
-                        <p className="font-mono text-green-400 mb-2">S = 1 / (max(κᵢ) + ε)</p>
-                        <p className="text-sm text-slate-300">Inverse of maximum curvature</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-slate-200">Stability Ranges:</h5>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">0.1 - 0.2</span>
-                            <Badge variant="destructive">Volatile</Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">0.2 - 0.5</span>
-                            <Badge variant="secondary">Unstable</Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">0.5 - 2.0</span>
-                            <Badge variant="outline" className="border-yellow-500 text-yellow-400">
-                              Moderate
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                            <span className="text-slate-300">2.0+</span>
-                            <Badge variant="outline" className="border-green-500 text-green-400">
-                              Stable
-                            </Badge>
-                          </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0.2-0.4: Poor</span>
+                          <Badge variant="secondary" className="bg-red-700">
+                            Unstable
+                          </Badge>
                         </div>
-                      </div>
-
-                      <div className="bg-amber-500/10 p-3 rounded">
-                        <h5 className="font-semibold text-amber-400 mb-1">Key Insight:</h5>
-                        <p className="text-sm text-slate-300">
-                          Stability is inversely related to your highest curvature. If one emotion has very high
-                          curvature, your overall stability will be low, even if other emotions are balanced.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/30 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-slate-200 mb-4">Combined Interpretation</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h5 className="font-semibold text-blue-400 mb-2">Energy + Stability Combinations:</h5>
-                      <div className="space-y-2 text-sm text-slate-300">
-                        <div className="p-2 bg-green-500/10 rounded">
-                          <strong>High Energy + High Stability:</strong> Intense but balanced emotions
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0.4-0.6: Fair</span>
+                          <Badge variant="secondary" className="bg-yellow-700">
+                            Variable
+                          </Badge>
                         </div>
-                        <div className="p-2 bg-yellow-500/10 rounded">
-                          <strong>High Energy + Low Stability:</strong> Emotional volatility/chaos
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0.6-0.8: Good</span>
+                          <Badge variant="secondary" className="bg-green-700">
+                            Stable
+                          </Badge>
                         </div>
-                        <div className="p-2 bg-blue-500/10 rounded">
-                          <strong>Low Energy + High Stability:</strong> Calm, balanced state
-                        </div>
-                        <div className="p-2 bg-red-500/10 rounded">
-                          <strong>Low Energy + Low Stability:</strong> Emotional numbness/disconnection
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">0.8-1.0: Excellent</span>
+                          <Badge variant="secondary" className="bg-blue-700">
+                            Very Stable
+                          </Badge>
                         </div>
                       </div>
                     </div>
-                    <div>
-                      <h5 className="font-semibold text-purple-400 mb-2">Practical Applications:</h5>
-                      <ul className="space-y-1 text-sm text-slate-300">
-                        <li>• Track changes over time to see patterns</li>
-                        <li>• Use metrics to validate how you're feeling</li>
-                        <li>• Identify when you need emotional regulation</li>
-                        <li>• Set goals for improving stability</li>
-                        <li>• Recognize when energy levels are concerning</li>
-                      </ul>
+                    <div className="bg-pink-900/20 p-4 rounded-lg border border-pink-800/30">
+                      <p className="text-sm text-slate-300">
+                        <strong>Stability Factors:</strong> Based on curvature variance. Higher stability means more
+                        predictable emotional patterns and better regulation.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </TabsContent>
 
-            <TabsContent value="examples" className="space-y-6 mt-6">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-slate-100">Real-World Examples</h3>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {Object.entries(exampleScenarios).map(([key, scenario]) => (
-                    <Button
-                      key={key}
-                      variant={activeExample === key ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveExample(key)}
-                      className={activeExample === key ? "bg-gradient-to-r from-blue-500 to-purple-600" : ""}
-                    >
-                      {scenario.name}
-                    </Button>
-                  ))}
+              <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 p-6 rounded-lg border border-green-800/30">
+                <h4 className="font-semibold text-green-300 mb-4">Combined Interpretation Matrix</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <p className="font-medium text-slate-200 mb-1">High Energy + High Stability</p>
+                    <p className="text-slate-400">Optimal state: energetic but controlled</p>
+                  </div>
+                  <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <p className="font-medium text-slate-200 mb-1">High Energy + Low Stability</p>
+                    <p className="text-slate-400">Manic/anxious: intense but chaotic</p>
+                  </div>
+                  <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <p className="font-medium text-slate-200 mb-1">Low Energy + High Stability</p>
+                    <p className="text-slate-400">Calm state: peaceful and controlled</p>
+                  </div>
+                  <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <p className="font-medium text-slate-200 mb-1">Low Energy + Low Stability</p>
+                    <p className="text-slate-400">Concerning: depressed and unstable</p>
+                  </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                {Object.entries(exampleScenarios).map(([key, scenario]) => {
-                  if (activeExample !== key) return null
+        <TabsContent value="examples" className="space-y-6 mt-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-100">
+                <Lightbulb className="h-5 w-5 text-pink-400" />
+                Real-World Examples
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Interactive examples showing different emotional states and their interpretations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-wrap gap-2 mb-6">
+                {Object.entries(examples).map(([key, example]) => (
+                  <Button
+                    key={key}
+                    variant={selectedExample === key ? "default" : "outline"}
+                    onClick={() => setSelectedExample(key)}
+                    className={
+                      selectedExample === key ? "bg-gradient-to-r from-pink-500 to-purple-600" : "border-slate-600"
+                    }
+                  >
+                    {example.name}
+                  </Button>
+                ))}
+              </div>
 
-                  const metrics = calculateExampleMetrics(scenario.emotions)
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">{currentExample.name}</h3>
+                  <p className="text-slate-400">{currentExample.description}</p>
 
-                  return (
-                    <div key={key} className="space-y-6">
-                      <div className="bg-gradient-to-r from-slate-700/50 to-slate-600/50 p-6 rounded-lg">
-                        <h4 className="text-xl font-semibold text-slate-100 mb-2">{scenario.name}</h4>
-                        <p className="text-slate-300 mb-4">{scenario.description}</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <h5 className="font-semibold text-blue-400 mb-3">Emotion Ratings:</h5>
-                            <div className="space-y-2">
-                              {Object.entries(scenario.emotions).map(([emotion, value]) => (
-                                <div
-                                  key={emotion}
-                                  className="flex justify-between items-center p-2 bg-slate-700/30 rounded"
-                                >
-                                  <span className="text-slate-300 capitalize">{emotion}:</span>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-20 h-2 bg-slate-600 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300"
-                                        style={{ width: `${(value as number) * 10}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-slate-100 font-semibold w-6">{value as number}</span>
-                                  </div>
-                                </div>
-                              ))}
+                  <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h4 className="font-medium text-slate-200 mb-3">Emotion Breakdown</h4>
+                    <div className="space-y-2">
+                      {Object.entries(currentExample.emotions).map(([emotion, value]) => (
+                        <div key={emotion} className="flex items-center justify-between">
+                          <span className="text-sm text-slate-300 capitalize">{emotion}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300"
+                                style={{ width: `${(value / 10) * 100}%` }}
+                              />
                             </div>
-                          </div>
-
-                          <div>
-                            <h5 className="font-semibold text-green-400 mb-3">Calculated Metrics:</h5>
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                                <span className="text-slate-300">Emotional Energy:</span>
-                                <span className="text-slate-100 font-semibold">{metrics.energy.toFixed(1)}</span>
-                              </div>
-                              <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                                <span className="text-slate-300">Stability Index:</span>
-                                <span className="text-slate-100 font-semibold">{metrics.stability.toFixed(3)}</span>
-                              </div>
-                              <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                                <span className="text-slate-300">Max Curvature:</span>
-                                <span className="text-slate-100 font-semibold">
-                                  {Math.max(...metrics.curvatures).toFixed(3)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center p-2 bg-slate-700/30 rounded">
-                                <span className="text-slate-300">Baseline (Mean):</span>
-                                <span className="text-slate-100 font-semibold">{metrics.mean.toFixed(2)}</span>
-                              </div>
-                            </div>
+                            <span className="text-sm text-slate-400 w-6">{value}</span>
                           </div>
                         </div>
-                      </div>
+                      ))}
+                    </div>
+                  </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-slate-700/30 p-4 rounded-lg">
-                          <h5 className="font-semibold text-purple-400 mb-3">Vector Analysis:</h5>
-                          <div className="space-y-2 text-sm">
-                            {Object.entries(scenario.emotions).map(([emotion, value], index) => {
-                              if (value === 0) return null
-                              return (
-                                <div
-                                  key={emotion}
-                                  className="flex justify-between items-center p-2 bg-slate-600/30 rounded"
-                                >
-                                  <span className="text-slate-300 capitalize">{emotion}:</span>
-                                  <div className="text-right">
-                                    <div className="text-slate-100">{metrics.vectors[index].toFixed(2)} magnitude</div>
-                                    <div className="text-xs text-slate-400">
-                                      {metrics.curvatures[index].toFixed(3)} curvature
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-700/30 p-4 rounded-lg">
-                          <h5 className="font-semibold text-amber-400 mb-3">Key Insights:</h5>
-                          <ul className="space-y-2 text-sm text-slate-300">
-                            {scenario.insights.map((insight, index) => (
-                              <li key={index} className="flex items-start gap-2">
-                                <div className="w-2 h-2 bg-amber-400 rounded-full mt-2 flex-shrink-0"></div>
-                                <span>{insight}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
-                        <h5 className="font-semibold text-blue-400 mb-2">What This Would Look Like in Charts:</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-300">
-                          <div>
-                            <strong>Radar Chart:</strong> Would show{" "}
-                            {Object.entries(scenario.emotions).filter(([_, v]) => v > 0).length} active emotions with{" "}
-                            {Object.entries(scenario.emotions).reduce((max, [_, v]) => Math.max(max, v as number), 0) >
-                            7
-                              ? "sharp spikes"
-                              : "moderate peaks"}
-                          </div>
-                          <div>
-                            <strong>Curvature Chart:</strong>{" "}
-                            {Math.max(...metrics.curvatures) > 0.8
-                              ? "High bars indicating instability"
-                              : Math.max(...metrics.curvatures) > 0.3
-                                ? "Moderate bars showing some deviation"
-                                : "Low bars indicating stability"}
-                          </div>
-                          <div>
-                            <strong>Energy Bar:</strong>{" "}
-                            {metrics.energy > 200
-                              ? "Long bar (high energy)"
-                              : metrics.energy > 50
-                                ? "Medium bar (moderate energy)"
-                                : "Short bar (low energy)"}
-                          </div>
-                        </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                      <h4 className="font-medium text-slate-200 mb-2">Energy Level</h4>
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-400" />
+                        <span className="text-lg font-bold text-slate-200">{currentExample.energy}</span>
+                        <span className="text-sm text-slate-400">/10</span>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            </TabsContent>
-          </Tabs>
+                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                      <h4 className="font-medium text-slate-200 mb-2">Stability</h4>
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-pink-400" />
+                        <span className="text-lg font-bold text-slate-200">{currentExample.stability}</span>
+                        <span className="text-sm text-slate-400">/1.0</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-700">
-            <Button
-              onClick={onClose}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              Close Detailed Guide
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">Analysis & Insights</h3>
+
+                  <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h4 className="font-medium text-slate-200 mb-2">Curvature Analysis</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-4 w-4 text-orange-400" />
+                      <span className="text-lg font-bold text-slate-200">{currentExample.curvature}</span>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          currentExample.curvature < 0.3
+                            ? "bg-green-700"
+                            : currentExample.curvature < 0.6
+                              ? "bg-yellow-700"
+                              : currentExample.curvature < 0.8
+                                ? "bg-orange-700"
+                                : "bg-red-700"
+                        }
+                      >
+                        {currentExample.curvature < 0.3
+                          ? "Stable"
+                          : currentExample.curvature < 0.6
+                            ? "Moderate"
+                            : currentExample.curvature < 0.8
+                              ? "High"
+                              : "Critical"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      {currentExample.curvature < 0.3
+                        ? "Low volatility, predictable emotional patterns"
+                        : currentExample.curvature < 0.6
+                          ? "Normal emotional fluctuations"
+                          : currentExample.curvature < 0.8
+                            ? "Significant emotional volatility, may need support"
+                            : "Extreme instability, professional help recommended"}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h4 className="font-medium text-slate-200 mb-3">Recommendations</h4>
+                    <ul className="space-y-2 text-sm text-slate-400">
+                      {selectedExample === "balanced" && (
+                        <>
+                          <li>• Maintain current emotional regulation strategies</li>
+                          <li>• Continue healthy lifestyle habits</li>
+                          <li>• Consider helping others with emotional challenges</li>
+                        </>
+                      )}
+                      {selectedExample === "stressed" && (
+                        <>
+                          <li>• Practice immediate stress reduction techniques</li>
+                          <li>• Consider professional counseling support</li>
+                          <li>• Focus on grounding and breathing exercises</li>
+                          <li>• Identify and address stress triggers</li>
+                        </>
+                      )}
+                      {selectedExample === "excited" && (
+                        <>
+                          <li>• Channel energy into productive activities</li>
+                          <li>• Monitor for signs of mania if persistent</li>
+                          <li>• Ensure adequate rest and sleep</li>
+                          <li>• Practice mindfulness to maintain awareness</li>
+                        </>
+                      )}
+                      {selectedExample === "depressed" && (
+                        <>
+                          <li>• Seek professional mental health support</li>
+                          <li>• Focus on basic self-care activities</li>
+                          <li>• Consider medication evaluation</li>
+                          <li>• Build support network connections</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-pink-900/20 to-purple-900/20 p-4 rounded-lg border border-pink-800/30">
+                    <h4 className="font-semibold text-pink-300 mb-2">Key Takeaway</h4>
+                    <p className="text-sm text-slate-300">
+                      {selectedExample === "balanced" &&
+                        "This represents an ideal emotional state with good regulation and moderate positive emotions."}
+                      {selectedExample === "stressed" &&
+                        "High negative emotions with poor stability indicate need for immediate stress management."}
+                      {selectedExample === "excited" &&
+                        "Very high positive emotions can be wonderful but monitor for sustainability and balance."}
+                      {selectedExample === "depressed" &&
+                        "Dominant sadness with low energy suggests clinical depression requiring professional support."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

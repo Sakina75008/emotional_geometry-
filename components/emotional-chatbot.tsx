@@ -184,7 +184,7 @@ export function EmotionalChatbot({ analysis, emotions, messages, setMessages }: 
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                     message.role === "user"
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      : "bg-slate-700/50 dark:bg-slate-700/70 text-slate-100 border border-slate-600/30"
                   }`}
                 >
                   <p>{message.content}</p>
@@ -206,7 +206,7 @@ export function EmotionalChatbot({ analysis, emotions, messages, setMessages }: 
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                   <Bot className="h-4 w-4 text-blue-500" />
                 </div>
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                <div className="bg-slate-700/50 dark:bg-slate-700/70 rounded-lg px-3 py-2 border border-slate-600/30">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div

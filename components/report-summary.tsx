@@ -18,59 +18,62 @@ export function ReportSummary({ analysis, emotions }: ReportSummaryProps) {
   const getClassificationColor = () => {
     switch (analysis.classification) {
       case "Stable":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+        return "bg-emerald-800/80 text-emerald-100 border border-emerald-600/50"
       case "Unstable":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
+        return "bg-amber-800/80 text-amber-100 border border-amber-600/50"
       case "Volatile":
-        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+        return "bg-rose-800/80 text-rose-100 border border-rose-600/50"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
+        return "bg-slate-800/80 text-slate-100 border border-slate-600/50"
     }
   }
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-indigo-900/90 to-purple-900/90 border-indigo-700/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-indigo-100">
           Emotional State Analysis
           {getStabilityIcon()}
         </CardTitle>
-        <CardDescription>Generated at {new Date().toLocaleString()}</CardDescription>
+        <CardDescription className="text-indigo-200/80">Generated at {new Date().toLocaleString()}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-all duration-200 hover:scale-105">
-            <div className="text-xl font-bold text-blue-600 mb-1">{analysis.dominantEmotion}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Dominant Emotion</div>
+          <div className="text-center p-4 bg-gradient-to-br from-blue-800/80 to-blue-900/80 rounded-lg border border-blue-600/50 transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+            <div className="text-xl font-bold text-blue-100 mb-1">{analysis.dominantEmotion}</div>
+            <div className="text-sm text-blue-200/80">Dominant Emotion</div>
           </div>
 
-          <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-800 transition-all duration-200 hover:scale-105">
-            <div className="text-xl font-bold text-purple-600 mb-1">{analysis.emotionalEnergy.toFixed(1)}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Emotional Energy</div>
+          <div className="text-center p-4 bg-gradient-to-br from-purple-800/80 to-purple-900/80 rounded-lg border border-purple-600/50 transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+            <div className="text-xl font-bold text-purple-100 mb-1">{analysis.emotionalEnergy.toFixed(1)}</div>
+            <div className="text-sm text-purple-200/80">Emotional Energy</div>
           </div>
 
-          <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-800 transition-all duration-200 hover:scale-105">
-            <div className="text-xl font-bold text-orange-600 mb-1">{analysis.dominantCurvature}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Highest Curvature</div>
+          <div className="text-center p-4 bg-gradient-to-br from-orange-800/80 to-orange-900/80 rounded-lg border border-orange-600/50 transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+            <div className="text-xl font-bold text-orange-100 mb-1">{analysis.dominantCurvature}</div>
+            <div className="text-sm text-orange-200/80">Highest Curvature</div>
           </div>
 
-          <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 transition-all duration-200 hover:scale-105">
-            <div className="text-xl font-bold text-green-600 mb-1">{(analysis.stabilityIndex * 100).toFixed(1)}%</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Stability Score</div>
+          <div className="text-center p-4 bg-gradient-to-br from-green-800/80 to-green-900/80 rounded-lg border border-green-600/50 transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+            <div className="text-xl font-bold text-green-100 mb-1">{(analysis.stabilityIndex * 100).toFixed(1)}%</div>
+            <div className="text-sm text-green-200/80">Stability Score</div>
           </div>
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium">Overall Classification:</span>
+          <span className="text-sm font-medium text-indigo-200">Overall Classification:</span>
           <Badge className={getClassificationColor()}>{analysis.classification}</Badge>
         </div>
 
         {analysis.biometricFlags.length > 0 && (
           <div className="space-y-2">
-            <span className="text-sm font-medium">Biometric Flags:</span>
+            <span className="text-sm font-medium text-indigo-200">Biometric Flags:</span>
             <div className="flex flex-wrap gap-2">
               {analysis.biometricFlags.map((flag, index) => (
-                <Badge key={index} variant="secondary">
+                <Badge
+                  key={index}
+                  className="bg-teal-800/80 text-teal-100 border border-teal-600/50 hover:bg-teal-700/80"
+                >
                   {flag}
                 </Badge>
               ))}

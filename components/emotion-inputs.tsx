@@ -10,18 +10,17 @@ interface EmotionInputsProps {
 }
 
 const emotionConfig = [
-  { key: "joy", label: "Joy", color: "from-yellow-400 to-orange-500", emoji: "😊", textColor: "text-yellow-400" },
-  { key: "sadness", label: "Sadness", color: "from-blue-400 to-blue-600", emoji: "😢", textColor: "text-blue-400" },
-  { key: "anger", label: "Anger", color: "from-red-400 to-red-600", emoji: "😠", textColor: "text-red-400" },
-  { key: "fear", label: "Fear", color: "from-purple-400 to-purple-600", emoji: "😨", textColor: "text-purple-400" },
+  { key: "joy", label: "Joy", color: "from-yellow-400 to-orange-500", textColor: "text-yellow-400" },
+  { key: "sadness", label: "Sadness", color: "from-blue-400 to-blue-600", textColor: "text-blue-400" },
+  { key: "anger", label: "Anger", color: "from-red-400 to-red-600", textColor: "text-red-400" },
+  { key: "fear", label: "Fear", color: "from-purple-400 to-purple-600", textColor: "text-purple-400" },
   {
     key: "surprise",
     label: "Surprise",
     color: "from-orange-400 to-pink-500",
-    emoji: "😲",
     textColor: "text-orange-400",
   },
-  { key: "disgust", label: "Disgust", color: "from-green-400 to-green-600", emoji: "🤢", textColor: "text-green-400" },
+  { key: "disgust", label: "Disgust", color: "from-green-400 to-green-600", textColor: "text-green-400" },
 ]
 
 export function EmotionInputs({ emotions, setEmotions }: EmotionInputsProps) {
@@ -31,13 +30,15 @@ export function EmotionInputs({ emotions, setEmotions }: EmotionInputsProps) {
 
   return (
     <div className="space-y-6">
-      {emotionConfig.map(({ key, label, color, emoji, textColor }) => (
+      {emotionConfig.map(({ key, label, color, textColor }) => (
         <div key={key} className="space-y-3 group">
           <div className="flex items-center justify-between">
             <Label
               className={`flex items-center gap-3 ${textColor} transition-all duration-300 group-hover:scale-105 font-medium`}
             >
-              <span className="text-2xl transition-transform duration-300 group-hover:scale-110">{emoji}</span>
+              <div
+                className={`w-3 h-3 rounded-full bg-gradient-to-r ${color} transition-all duration-300 group-hover:scale-125 shadow-sm`}
+              />
               {label}
             </Label>
             <div

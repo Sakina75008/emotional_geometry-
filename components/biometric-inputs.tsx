@@ -59,7 +59,7 @@ export function BiometricInputs({ biometrics, setBiometrics }: BiometricInputsPr
               <Icon className="h-4 w-4" />
               {label}
             </Label>
-            <span className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+            <span className="text-sm font-mono bg-slate-700/50 dark:bg-slate-700/70 px-2 py-1 rounded border border-slate-600/30">
               {biometrics[key as keyof BiometricData]}
             </span>
           </div>
@@ -69,7 +69,7 @@ export function BiometricInputs({ biometrics, setBiometrics }: BiometricInputsPr
             max={max}
             min={min}
             step={1}
-            className="w-full"
+            className="w-full text-purple-900"
           />
         </div>
       ))}

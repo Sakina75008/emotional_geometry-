@@ -1,11 +1,5 @@
-import { OpenAIStream, StreamingTextResponse } from "ai"
-import OpenAI from "openai"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-})
-
-export const runtime = "edge"
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30
 
 interface EmotionTrend {
   timestamp: number
@@ -14,114 +8,179 @@ interface EmotionTrend {
   stabilityIndex: number
 }
 
-interface ResponseStyle {
-  warmth: number // 0-10 (clinical to very warm)
-  directness: number // 0-10 (gentle suggestions to direct advice)
-  optimism: number // 0-10 (realistic to highly optimistic)
-  formality: number // 0-10 (casual to professional)
-  sarcasmFilter: boolean
-  personalityType: "therapist" | "friend" | "coach" | "mentor"
-}
-
-interface TraumaIndicators {
-  dissociation: boolean
-  hypervigilance: boolean
-  avoidance: boolean
-  intrusion: boolean
-  severity: "mild" | "moderate" | "severe"
+interface PersonalContext {
+  name?: string
+  job?: string
+  relationships?: string[]
+  interests?: string[]
+  challenges?: string[]
+  goals?: string[]
+  previousTopics?: string[]
 }
 
 export async function POST(req: Request) {
-  const {
-    messages,
-    emotionData,
-    emotionHistory = [],
-    responseStyle = {
-      warmth: 8,
-      directness: 5,
-      optimism: 6,
-      formality: 3,
-      sarcasmFilter: true,
-      personalityType: "therapist",
-    },
-    traumaIndicators = null,
-  } = await req.json()
+  try {
+    const {
+      messages,
+      emotionData,
+      emotionHistory = [],
+      personalContext = {},
+      isInCrisisMode = false,
+    } = await req.json()
 
-  // Analyze emotional trends
-  const trendAnalysis = analyzeEmotionalTrends(emotionHistory)
-  const traumaAssessment = assessTraumaIndicators(emotionData, messages)
+    // Get the last user message
+    const lastMessage = messages[messages.length - 1]?.content || ""
 
-  let groundingInstructions = ""
-  let traumaProtocol = ""
-  let personalityAdjustments = ""
+    // Analyze emotional trends
+    const trendAnalysis = analyzeEmotionalTrends(emotionHistory)
+    const personalInfo = extractPersonalInformation(messages, personalContext)
+    const responseType = analyzeResponseType(messages)
 
-  // Enhanced emotional crisis detection
-  if (emotionData) {
-    const criticalEmotions = Object.entries(emotionData).filter(
-      ([emotion, value]) => ["sadness", "anger", "fear", "disgust"].includes(emotion) && value >= 8,
-    )
+    // Build comprehensive system prompt
+    const systemPrompt = buildSystemPrompt({
+      emotionData,
+      trendAnalysis,
+      personalInfo,
+      responseType,
+      isInCrisisMode,
+    })
 
-    const moderateDistress = Object.entries(emotionData).filter(
-      ([emotion, value]) => ["sadness", "anger", "fear"].includes(emotion) && value >= 6,
-    )
+    // Use OpenAI API directly
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages.slice(-5), // Keep last 5 messages for context
+        ],
+        temperature: 0.7,
+        max_tokens: 300,
+      }),
+    })
 
-    if (criticalEmotions.length > 0) {
-      groundingInstructions = generateCrisisProtocol(criticalEmotions, trendAnalysis)
-    } else if (moderateDistress.length > 0) {
-      groundingInstructions = generateSupportProtocol(moderateDistress, trendAnalysis)
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`)
     }
+
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response right now."
+
+    return Response.json({ content })
+  } catch (error) {
+    console.error("Chat API error:", error)
+    return Response.json(
+      { content: "I'm experiencing some technical difficulties. Please try again in a moment." },
+      { status: 500 },
+    )
   }
+}
 
-  // Trauma-specific protocols
-  if (traumaAssessment.hasTraumaIndicators || traumaIndicators) {
-    traumaProtocol = generateTraumaProtocol(traumaAssessment, traumaIndicators)
-  }
-
-  // Personality and response style adjustments
-  personalityAdjustments = generatePersonalityPrompt(responseStyle)
-
-  const trendInsights =
-    trendAnalysis.insights.length > 0 ? `\n\nEMOTIONAL TREND INSIGHTS:\n${trendAnalysis.insights.join("\n")}` : ""
-
-  const fullPrompt = `You are an advanced AI emotional support companion with deep empathy and therapeutic training. Your responses are personalized based on the user's emotional patterns and preferences.
+function buildSystemPrompt({ emotionData, trendAnalysis, personalInfo, responseType, isInCrisisMode }: any) {
+  let prompt = `You are an advanced AI emotional support companion with deep empathy and therapeutic training. Your responses are personalized based on the user's emotional patterns and personal information.
 
 CORE PRINCIPLES:
 - Validate all feelings without judgment
 - Provide evidence-based emotional support
-- Adapt your communication style to user preferences
-- Recognize and respond to trauma indicators appropriately
-- Use emotional trend data to provide contextual support
+- Remember and reference personal information naturally
+- Handle minimal responses with empathy and gentle exploration
+- Recognize crisis situations and provide appropriate support
 
-${personalityAdjustments}
+`
 
-CURRENT EMOTIONAL STATE:
-${emotionData ? `Joy: ${emotionData.joy}/10, Sadness: ${emotionData.sadness}/10, Anger: ${emotionData.anger}/10, Fear: ${emotionData.fear}/10, Surprise: ${emotionData.surprise}/10, Disgust: ${emotionData.disgust}/10` : "Not provided"}
+  // Add personal context if available
+  if (personalInfo.hasPersonalInfo) {
+    prompt += `PERSONAL CONTEXT:\n`
+    if (personalInfo.name) {
+      prompt += `- User's name: ${personalInfo.name}\n`
+    }
+    if (personalInfo.job) {
+      prompt += `- Occupation: ${personalInfo.job}\n`
+    }
+    if (personalInfo.relationships && personalInfo.relationships.length > 0) {
+      prompt += `- Relationships: ${personalInfo.relationships.join(", ")}\n`
+    }
+    if (personalInfo.interests && personalInfo.interests.length > 0) {
+      prompt += `- Interests: ${personalInfo.interests.join(", ")}\n`
+    }
+    prompt += `\n`
+  }
 
-${trendInsights}
+  // Add emotional state information
+  if (emotionData) {
+    prompt += `CURRENT EMOTIONAL STATE:\n`
+    prompt += `Joy: ${emotionData.joy}/10, Sadness: ${emotionData.sadness}/10, `
+    prompt += `Anger: ${emotionData.anger}/10, Fear: ${emotionData.fear}/10, `
+    prompt += `Surprise: ${emotionData.surprise}/10, Disgust: ${emotionData.disgust}/10\n\n`
 
-${groundingInstructions}
+    // Check for high negative emotions
+    const criticalEmotions = Object.entries(emotionData).filter(
+      ([emotion, value]) => ["sadness", "anger", "fear", "disgust"].includes(emotion) && value >= 8,
+    )
 
-${traumaProtocol}
+    if (criticalEmotions.length > 0) {
+      prompt += `CRISIS INDICATORS DETECTED:\n`
+      prompt += `High levels of: ${criticalEmotions.map(([emotion]) => emotion).join(", ")}\n`
+      prompt += `Provide immediate emotional support and grounding techniques.\n\n`
+    }
+  }
 
-RESPONSE GUIDELINES:
-- Keep responses concise but meaningful (2-4 sentences typically)
-- Use appropriate emojis based on warmth setting
-- Offer specific, actionable support when appropriate
+  // Add trend analysis
+  if (trendAnalysis.insights.length > 0) {
+    prompt += `EMOTIONAL TRENDS:\n`
+    trendAnalysis.insights.forEach((insight: string) => {
+      prompt += `- ${insight}\n`
+    })
+    prompt += `\n`
+  }
+
+  // Handle minimal responses
+  if (responseType.isMinimal) {
+    prompt += `MINIMAL RESPONSE DETECTED:\n`
+    prompt += `User responded with "${responseType.originalMessage}" which may indicate:\n`
+
+    switch (responseType.type) {
+      case "dismissive":
+        prompt += `- Feeling overwhelmed or wanting to end conversation\n`
+        prompt += `- Emotional shutdown or avoidance\n`
+        prompt += `- Respond with gentle acknowledgment and exploration\n`
+        break
+      case "acknowledgment":
+        prompt += `- They're listening but processing\n`
+        prompt += `- Continue conversation naturally while inviting more sharing\n`
+        break
+      case "uncertain":
+        prompt += `- Confusion about their feelings\n`
+        prompt += `- Help them explore step by step\n`
+        break
+    }
+    prompt += `\n`
+  }
+
+  // Crisis mode handling
+  if (isInCrisisMode) {
+    prompt += `CRISIS MODE ACTIVE:\n`
+    prompt += `- Priority is immediate safety and stabilization\n`
+    prompt += `- Offer grounding techniques after acknowledging their crisis\n`
+    prompt += `- Use calm, clear, non-judgmental language\n`
+    prompt += `- Focus on present moment and basic needs\n\n`
+  }
+
+  prompt += `RESPONSE GUIDELINES:
+- Keep responses concise but meaningful (2-4 sentences)
+- Use warm, empathetic language with appropriate emojis
+- Reference personal information naturally when relevant
 - Ask gentle follow-up questions to deepen understanding
-- Reference emotional patterns when relevant
+- Offer specific, actionable support when appropriate
+- Show genuine interest in their life and experiences
 
 Begin your empathetic response now.`
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    stream: true,
-    messages: [{ role: "system", content: fullPrompt }, ...messages],
-    temperature: Math.max(0.3, Math.min(0.9, responseStyle.warmth / 10)),
-    max_tokens: responseStyle.directness > 7 ? 200 : 150,
-  })
-
-  const stream = OpenAIStream(response)
-  return new StreamingTextResponse(stream)
+  return prompt
 }
 
 function analyzeEmotionalTrends(emotionHistory: EmotionTrend[]) {
@@ -130,10 +189,10 @@ function analyzeEmotionalTrends(emotionHistory: EmotionTrend[]) {
   }
 
   const insights: string[] = []
-  const recent = emotionHistory.slice(-5) // Last 5 entries
+  const recent = emotionHistory.slice(-5)
   const patterns: Record<string, any> = {}
 
-  // Trend analysis
+  // Analyze trends for each emotion
   const emotions = ["joy", "sadness", "anger", "fear", "surprise", "disgust"]
 
   emotions.forEach((emotion) => {
@@ -157,24 +216,6 @@ function analyzeEmotionalTrends(emotionHistory: EmotionTrend[]) {
     insights.push("Your emotional stability has been quite good recently. Great progress!")
   }
 
-  // Pattern recognition
-  const dominantEmotions = recent.map((entry) => entry.dominantEmotion)
-  const emotionCounts = dominantEmotions.reduce(
-    (acc, emotion) => {
-      acc[emotion] = (acc[emotion] || 0) + 1
-      return acc
-    },
-    {} as Record<string, number>,
-  )
-
-  const mostFrequent = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0]
-
-  if (mostFrequent && mostFrequent[1] >= 3) {
-    insights.push(
-      `${mostFrequent[0]} has been your dominant emotion recently. Let's explore what might be contributing to this pattern.`,
-    )
-  }
-
   return { insights, patterns }
 }
 
@@ -191,192 +232,120 @@ function calculateTrend(values: number[]) {
   return { slope, intercept, direction: slope > 0 ? "increasing" : "decreasing" }
 }
 
-function assessTraumaIndicators(emotionData: any, messages: any[]) {
-  const indicators = {
-    dissociation: false,
-    hypervigilance: false,
-    avoidance: false,
-    intrusion: false,
-    hasTraumaIndicators: false,
+function extractPersonalInformation(messages: any[], existingContext: PersonalContext) {
+  const personalInfo = { ...existingContext, hasPersonalInfo: false }
+
+  if (!messages || messages.length === 0) return personalInfo
+
+  const recentMessages = messages.slice(-5).map((m) => m.content?.toLowerCase() || "")
+  const allText = recentMessages.join(" ")
+
+  // Extract name
+  const namePatterns = [/my name is (\w+)/i, /i'm (\w+)/i, /call me (\w+)/i, /i am (\w+)/i]
+
+  for (const pattern of namePatterns) {
+    const match = allText.match(pattern)
+    if (match && match[1]) {
+      personalInfo.name = match[1].charAt(0).toUpperCase() + match[1].slice(1)
+      personalInfo.hasPersonalInfo = true
+      break
+    }
   }
 
-  if (!emotionData || !messages) return indicators
+  // Extract job/work information
+  const jobPatterns = [/i work as (?:a |an )?(\w+)/i, /i'm (?:a |an )?(\w+)/i, /my job is (\w+)/i, /i do (\w+)/i]
 
-  // Check for dissociation indicators
-  if (emotionData.fear >= 7 && emotionData.sadness >= 6) {
-    indicators.dissociation = true
+  for (const pattern of jobPatterns) {
+    const match = allText.match(pattern)
+    if (match && match[1] && !["feeling", "doing", "going", "having"].includes(match[1])) {
+      personalInfo.job = match[1]
+      personalInfo.hasPersonalInfo = true
+      break
+    }
   }
 
-  // Check message content for trauma keywords
-  const recentMessages = messages.slice(-3).map((m) => m.content?.toLowerCase() || "")
-  const traumaKeywords = [
-    "dissociate",
-    "disconnect",
-    "unreal",
-    "floating",
-    "watching myself",
-    "flashback",
-    "nightmare",
-    "triggered",
-    "panic",
-    "hypervigilant",
-    "avoid",
-    "can't stop thinking",
-    "intrusive thoughts",
+  // Extract relationships
+  const relationshipKeywords = [
+    "husband",
+    "wife",
+    "partner",
+    "boyfriend",
+    "girlfriend",
+    "spouse",
+    "kids",
+    "children",
+    "family",
+    "parents",
+    "mom",
+    "dad",
+    "sister",
+    "brother",
+  ]
+  const foundRelationships = relationshipKeywords.filter((keyword) => allText.includes(keyword))
+  if (foundRelationships.length > 0) {
+    personalInfo.relationships = [...(personalInfo.relationships || []), ...foundRelationships]
+    personalInfo.hasPersonalInfo = true
+  }
+
+  // Extract interests/hobbies
+  const interestPatterns = [/i love (\w+)/i, /i enjoy (\w+)/i, /i like (\w+)/i, /my hobby is (\w+)/i]
+
+  for (const pattern of interestPatterns) {
+    const match = allText.match(pattern)
+    if (match && match[1]) {
+      personalInfo.interests = [...(personalInfo.interests || []), match[1]]
+      personalInfo.hasPersonalInfo = true
+    }
+  }
+
+  return personalInfo
+}
+
+function analyzeResponseType(messages: any[]) {
+  if (!messages || messages.length === 0) return { isMinimal: false, type: "normal" }
+
+  const lastMessage = messages[messages.length - 1]?.content?.toLowerCase().trim() || ""
+
+  const minimalResponses = [
+    "ok",
+    "okay",
+    "k",
+    "mhm",
+    "mm",
+    "mmm",
+    "yeah",
+    "yep",
+    "yes",
+    "no",
+    "nah",
+    "sure",
+    "fine",
+    "whatever",
+    "idk",
+    "i don't know",
+    "maybe",
+    "i guess",
+    "uh huh",
+    "uh-huh",
+    "right",
+    "true",
+    "exactly",
+    "yup",
+    "nope",
   ]
 
-  recentMessages.forEach((message) => {
-    if (traumaKeywords.some((keyword) => message.includes(keyword))) {
-      indicators.hasTraumaIndicators = true
+  const isMinimal = minimalResponses.includes(lastMessage) || lastMessage.length <= 3
 
-      if (message.includes("dissociate") || message.includes("unreal") || message.includes("floating")) {
-        indicators.dissociation = true
-      }
-      if (message.includes("flashback") || message.includes("intrusive")) {
-        indicators.intrusion = true
-      }
-      if (message.includes("avoid") || message.includes("can't face")) {
-        indicators.avoidance = true
-      }
-      if (message.includes("hypervigilant") || message.includes("on edge")) {
-        indicators.hypervigilance = true
-      }
+  let responseType = "normal"
+  if (isMinimal) {
+    if (["ok", "okay", "k", "fine", "whatever"].includes(lastMessage)) {
+      responseType = "dismissive"
+    } else if (["mhm", "mm", "uh huh", "yeah"].includes(lastMessage)) {
+      responseType = "acknowledgment"
+    } else if (["idk", "i don't know", "maybe", "i guess"].includes(lastMessage)) {
+      responseType = "uncertain"
     }
-  })
-
-  return indicators
-}
-
-function generateCrisisProtocol(criticalEmotions: [string, number][], trendAnalysis: any) {
-  const emotionNames = criticalEmotions.map(([emotion]) => emotion).join(", ")
-
-  return `CRISIS SUPPORT PROTOCOL ACTIVATED:
-You are detecting signs of severe emotional distress (${emotionNames} at critical levels). 
-
-IMMEDIATE RESPONSE APPROACH:
-1. **Validation First**: "I can see you're going through something really difficult right now. Your feelings are completely valid."
-
-2. **Safety Assessment**: Gently check if they're in immediate danger without being alarming.
-
-3. **Grounding Techniques** (offer 2-3 options):
-   - **4-7-8 Breathing**: "Let's breathe together. In for 4... hold for 7... out for 8..."
-   - **5-4-3-2-1 Grounding**: Guide them to name 5 things they see, 4 they can touch, 3 they hear, 2 they smell, 1 they taste
-   - **Body Scan**: "Feel your feet on the ground, your back against the chair..."
-
-4. **Emotional Specific Support**:
-   - *High Sadness*: Acknowledge the pain, offer gentle distraction or comfort items
-   - *High Anger*: Validate the feeling, suggest safe physical outlets
-   - *High Fear*: Reassure safety, help assess reality of threat
-   - *High Disgust*: Acknowledge violation of values, suggest symbolic cleansing
-
-5. **Trend Context**: ${trendAnalysis.insights.length > 0 ? `Reference that you notice patterns: "${trendAnalysis.insights[0]}"` : ""}
-
-6. **Gentle Presence**: End with "I'm here with you. You don't have to go through this alone."
-
-AVOID: Minimizing feelings, rushing to solutions, overwhelming with too many techniques.`
-}
-
-function generateSupportProtocol(moderateEmotions: [string, number][], trendAnalysis: any) {
-  return `SUPPORTIVE CARE PROTOCOL:
-Moderate emotional distress detected. Provide warm, validating support with gentle guidance.
-
-APPROACH:
-- Acknowledge their emotional experience with empathy
-- Offer 1-2 coping strategies appropriate to their emotions
-- Reference emotional patterns if relevant: ${trendAnalysis.insights[0] || "Notice any patterns in their emotional journey"}
-- Ask gentle, open-ended questions to explore their experience
-- Provide hope and reassurance about their resilience`
-}
-
-function generateTraumaProtocol(assessment: any, traumaIndicators: TraumaIndicators | null) {
-  if (!assessment.hasTraumaIndicators && !traumaIndicators) return ""
-
-  return `TRAUMA-INFORMED CARE PROTOCOL:
-
-DISSOCIATION MANAGEMENT:
-- If dissociation detected: "Let's bring you back to the present moment. Feel your feet on the ground..."
-- **Grounding Techniques**: 
-  * Name 5 things you can see in detail
-  * Hold a textured object (ice cube, rough fabric)
-  * Splash cold water on face/wrists
-  * Strong mint or smell something distinct
-
-HYPERVIGILANCE SUPPORT:
-- Validate their alertness as a protective mechanism
-- **Progressive Muscle Relaxation**: Tense and release muscle groups
-- **Safe Space Visualization**: Guide them to imagine a completely safe place
-- **Boundary Setting**: Help them identify what feels safe vs unsafe
-
-INTRUSIVE THOUGHTS/FLASHBACKS:
-- **STOP Technique**: Stop, Take a breath, Observe surroundings, Proceed mindfully
-- **Container Visualization**: Imagine putting the memory in a strong container
-- **Bilateral Stimulation**: Alternate tapping knees or shoulders
-- **Remind**: "That was then, this is now. You are safe."
-
-AVOIDANCE PATTERNS:
-- Gentle exposure suggestions only when they're ready
-- **Pendulation**: Brief contact with difficult feeling, then return to safety
-- **Titration**: Break overwhelming experiences into tiny, manageable pieces
-
-GENERAL TRAUMA SUPPORT:
-- Always emphasize choice and control
-- Normalize trauma responses
-- Suggest professional trauma therapy when appropriate
-- Focus on building safety and stability first
-
-Remember: Go slow, follow their lead, prioritize safety over progress.`
-}
-
-function generatePersonalityPrompt(style: ResponseStyle) {
-  let prompt = `RESPONSE STYLE CONFIGURATION:\n`
-
-  // Warmth adjustment
-  if (style.warmth >= 8) {
-    prompt += `- Use warm, nurturing language with appropriate emojis 💙\n`
-  } else if (style.warmth >= 5) {
-    prompt += `- Maintain professional warmth without excessive emotional language\n`
-  } else {
-    prompt += `- Keep responses clinical and objective, minimal emotional language\n`
   }
 
-  // Directness
-  if (style.directness >= 7) {
-    prompt += `- Provide clear, direct advice and actionable steps\n`
-  } else if (style.directness >= 4) {
-    prompt += `- Balance gentle suggestions with some direct guidance\n`
-  } else {
-    prompt += `- Use very gentle suggestions, avoid direct advice\n`
-  }
-
-  // Optimism
-  if (style.optimism >= 7) {
-    prompt += `- Emphasize hope, growth potential, and positive reframing\n`
-  } else if (style.optimism >= 4) {
-    prompt += `- Balance realism with gentle hope\n`
-  } else {
-    prompt += `- Focus on validation and acceptance rather than positive outlook\n`
-  }
-
-  // Personality type
-  switch (style.personalityType) {
-    case "therapist":
-      prompt += `- Adopt a professional therapeutic stance with evidence-based approaches\n`
-      break
-    case "friend":
-      prompt += `- Respond like a caring, understanding friend who listens without judgment\n`
-      break
-    case "coach":
-      prompt += `- Take a motivational, goal-oriented approach focused on growth and action\n`
-      break
-    case "mentor":
-      prompt += `- Provide wise, experienced guidance with gentle teaching moments\n`
-      break
-  }
-
-  // Sarcasm filter
-  if (style.sarcasmFilter) {
-    prompt += `- IMPORTANT: Avoid all sarcasm, irony, or humor that could be misinterpreted\n`
-  }
-
-  return prompt
+  return { isMinimal, type: responseType, originalMessage: lastMessage }
 }
