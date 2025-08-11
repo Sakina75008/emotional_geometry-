@@ -365,15 +365,32 @@ export default function EmotionalGeometryAI() {
               )}
 
               {/* Analysis and Visualization Section */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-                <div className="xl:col-span-2">
+              <div className="space-y-12">
+                <div className="max-w-6xl mx-auto">
                   <EmotionalAnalysis analysis={analysis} emotions={emotions} />
                 </div>
-                <div className="xl:col-span-1">
-                  <div className="space-y-8">
-                    <VisualizationPanel analysis={analysis} emotions={emotions} />
-                    <ReportSummary analysis={analysis} emotions={emotions} biometrics={biometrics} />
-                  </div>
+
+                <div className="max-w-7xl mx-auto">
+                  <Card className="bg-slate-800/30 border-slate-700/50 backdrop-blur-xl shadow-xl">
+                    <CardHeader className="pb-8">
+                      <CardTitle className="flex items-center gap-4 text-slate-100 text-2xl">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                          <BarChart3 className="h-6 w-6 text-white" />
+                        </div>
+                        Emotional Visualizations
+                        <p className="text-slate-400 text-base font-normal ml-2">
+                          Geometric representation of your emotional state
+                        </p>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 pb-10">
+                      <VisualizationPanel analysis={analysis} emotions={emotions} />
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="max-w-4xl mx-auto">
+                  <ReportSummary analysis={analysis} emotions={emotions} biometrics={biometrics} />
                 </div>
               </div>
             </div>

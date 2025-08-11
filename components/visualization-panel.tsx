@@ -56,7 +56,7 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-semibold text-slate-100">Emotional Visualizations</h3>
@@ -72,10 +72,10 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Emotion Radar Chart */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm shadow-xl">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="text-slate-100 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-purple-400"></div>
               Emotion Radar
@@ -93,7 +93,7 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#475569" />
@@ -125,7 +125,7 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
 
         {/* Curvature Chart */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm shadow-xl">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="text-slate-100 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-orange-400"></div>
               Emotional Curvature
@@ -143,7 +143,7 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={curvatureData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
@@ -188,53 +188,52 @@ export function VisualizationPanel({ analysis, emotions }: VisualizationPanelPro
         </Card>
       </div>
 
-      {/* Quick Guide */}
-      <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-800/30 backdrop-blur-sm">
+      <Card className="bg-slate-800/70 border-slate-600 backdrop-blur-sm shadow-lg">
         <CardHeader>
-          <CardTitle className="text-blue-300 flex items-center gap-2">
+          <CardTitle className="text-slate-100 flex items-center gap-2">
             <Info className="h-5 w-5" />
             Quick Reading Guide
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
             <div>
-              <h4 className="font-semibold text-slate-200 mb-2">Radar Chart</h4>
-              <ul className="space-y-1 text-slate-300">
+              <h4 className="font-semibold text-slate-100 mb-3">Radar Chart</h4>
+              <ul className="space-y-2 text-slate-200">
                 <li>
-                  • <strong>Shape:</strong> Larger area = higher emotional intensity
+                  • <strong className="text-slate-100">Shape:</strong> Larger area = higher emotional intensity
                 </li>
                 <li>
-                  • <strong>Balance:</strong> Circular shape = emotional stability
+                  • <strong className="text-slate-100">Balance:</strong> Circular shape = emotional stability
                 </li>
                 <li>
-                  • <strong>Spikes:</strong> Sharp points = dominant emotions
+                  • <strong className="text-slate-100">Spikes:</strong> Sharp points = dominant emotions
                 </li>
                 <li>
-                  • <strong>Size:</strong> Distance from center = emotion strength
+                  • <strong className="text-slate-100">Size:</strong> Distance from center = emotion strength
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-slate-200 mb-2">Curvature Chart</h4>
-              <ul className="space-y-1 text-slate-300">
+              <h4 className="font-semibold text-slate-100 mb-3">Curvature Chart</h4>
+              <ul className="space-y-2 text-slate-200">
                 <li>
-                  • <strong>Height:</strong> Higher values = more volatility
+                  • <strong className="text-slate-100">Height:</strong> Higher values = more volatility
                 </li>
                 <li>
-                  • <strong>Peaks:</strong> Sharp spikes = emotional instability
+                  • <strong className="text-slate-100">Peaks:</strong> Sharp spikes = emotional instability
                 </li>
                 <li>
-                  • <strong>Smoothness:</strong> Flat lines = emotional regulation
+                  • <strong className="text-slate-100">Smoothness:</strong> Flat lines = emotional regulation
                 </li>
                 <li>
-                  • <strong>Range:</strong> 0-0.3 stable, 0.6+ concerning
+                  • <strong className="text-slate-100">Range:</strong> 0-0.3 stable, 0.6+ concerning
                 </li>
               </ul>
             </div>
           </div>
-          <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <p className="text-slate-300 text-sm">
+          <div className="mt-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+            <p className="text-slate-100 text-sm">
               <strong>Pro Tip:</strong> Click "Complete Reading Guide" above for detailed mathematical explanations,
               interpretation techniques, and real-world examples with full analysis.
             </p>
