@@ -59,7 +59,7 @@ export function BiometricInputs({ biometrics, setBiometrics }: BiometricInputsPr
               <Icon className="h-4 w-4" />
               {label}
             </Label>
-            <span className="text-sm font-mono bg-slate-700/50 dark:bg-slate-700/70 px-2 py-1 rounded border border-slate-600/30">
+            <span className="text-sm font-mono bg-slate-700/50 dark:bg-slate-700/70 px-2 py-1 rounded border border-slate-600/30 text-white">
               {biometrics[key as keyof BiometricData]}
             </span>
           </div>
