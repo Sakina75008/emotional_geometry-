@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageCircle, X, Send, Settings, User, Bot } from "lucide-react"
-import { useChat } from "ai/react"
 import type { AnalysisResult, EmotionData } from "@/app/page"
 import { ChatbotSettings } from "./chatbot-settings"
 
@@ -38,8 +37,10 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
   const [showSettings, setShowSettings] = useState(false)
   const [personalContext, setPersonalContext] = useState<PersonalContext>({})
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Load personal context from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("chatbot-personal-context")
     if (saved) {
@@ -51,38 +52,90 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
     }
   }, [])
 
-  // Save personal context to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("chatbot-personal-context", JSON.stringify(personalContext))
   }, [personalContext])
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
-    api: "/api/mental-health-chat",
-    body: {
-      emotionData: emotions,
-      personalContext,
-    },
-    onFinish: (message) => {
-      // Extract and update personal context from the conversation
-      updatePersonalContext(messages.concat([message]))
-    },
-  })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
 
-  const updatePersonalContext = (allMessages: any[]) => {
-    const userMessages = allMessages.filter((m) => m.role === "user")
-    if (userMessages.length === 0) return
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    }
 
-    const recentMessages = userMessages.slice(-3).map((m) => m.content?.toLowerCase() || "")
-    const allText = recentMessages.join(" ")
+    if (messages.length === 0) {
+      const initialMessage: Message = {
+        id: "initial",
+        role: "assistant",
+        content: getInitialMessage(),
+        timestamp: new Date(),
+      }
+      setMessages([initialMessage, userMessage])
+    } else {
+      setMessages((prev) => [...prev, userMessage])
+    }
 
+    setInput("")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          emotionData: emotions,
+          personalContext,
+          isInCrisisMode: analysis?.mentalStability === "critical",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to get response")
+      }
+
+      const data = await response.json()
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.content,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+
+      updatePersonalContext(userMessage.content)
+    } catch (error) {
+      console.error("Chat error:", error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updatePersonalContext = (messageContent: string) => {
     const newContext = { ...personalContext }
     let updated = false
 
-    // Extract name
     const namePatterns = [/my name is (\w+)/i, /i'm (\w+)/i, /call me (\w+)/i, /i am (\w+)/i]
-
     for (const pattern of namePatterns) {
-      const match = allText.match(pattern)
+      const match = messageContent.match(pattern)
       if (match && match[1] && !newContext.name) {
         newContext.name = match[1].charAt(0).toUpperCase() + match[1].slice(1)
         updated = true
@@ -90,11 +143,9 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
       }
     }
 
-    // Extract job/work information
     const jobPatterns = [/i work as (?:a |an )?(\w+)/i, /my job is (\w+)/i, /i'm (?:a |an )?(\w+)/i]
-
     for (const pattern of jobPatterns) {
-      const match = allText.match(pattern)
+      const match = messageContent.match(pattern)
       if (match && match[1] && !["feeling", "doing", "going", "having"].includes(match[1]) && !newContext.job) {
         newContext.job = match[1]
         updated = true
@@ -102,11 +153,9 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
       }
     }
 
-    // Extract interests
     const interestPatterns = [/i love (\w+)/i, /i enjoy (\w+)/i, /i like (\w+)/i, /my hobby is (\w+)/i]
-
     for (const pattern of interestPatterns) {
-      const match = allText.match(pattern)
+      const match = messageContent.match(pattern)
       if (match && match[1]) {
         if (!newContext.interests) newContext.interests = []
         if (!newContext.interests.includes(match[1])) {
@@ -171,20 +220,6 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
   }
 
   const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim()) return
-
-    // If this is the first message, add an initial bot message
-    if (messages.length === 0) {
-      const initialMessage = {
-        id: "initial",
-        role: "assistant" as const,
-        content: getInitialMessage(),
-        createdAt: new Date(),
-      }
-      setMessages([initialMessage])
-    }
-
     handleSubmit(e)
   }
 
@@ -318,7 +353,7 @@ export function MentalHealthChatbot({ analysis, emotions }: MentalHealthChatbotP
                   <form onSubmit={handleChatSubmit} className="flex gap-2">
                     <Input
                       value={input}
-                      onChange={handleInputChange}
+                      onChange={(e) => setInput(e.target.value)}
                       placeholder={getPlaceholder()}
                       className="flex-1 bg-slate-700/50 border-slate-600 text-slate-200 placeholder-slate-400 focus:border-blue-500"
                       disabled={isLoading}

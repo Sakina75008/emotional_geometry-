@@ -20,6 +20,8 @@ interface PersonalContext {
 
 export async function POST(req: Request) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY
+
     const {
       messages,
       emotionData,
@@ -27,6 +29,21 @@ export async function POST(req: Request) {
       personalContext = {},
       isInCrisisMode = false,
     } = await req.json()
+
+    if (!apiKey) {
+      console.log("OPENAI_API_KEY not available, using fallback responses")
+
+      // Use fallback response system
+      const fallbackResponse = generateFallbackResponse({
+        messages,
+        emotionData,
+        emotionHistory,
+        personalContext,
+        isInCrisisMode,
+      })
+
+      return Response.json({ content: fallbackResponse })
+    }
 
     // Get the last user message
     const lastMessage = messages[messages.length - 1]?.content || ""
@@ -45,11 +62,10 @@ export async function POST(req: Request) {
       isInCrisisMode,
     })
 
-    // Use OpenAI API directly
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -64,7 +80,20 @@ export async function POST(req: Request) {
     })
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`)
+      const errorText = await response.text()
+      console.error(`OpenAI API error: ${response.status} - ${errorText}`)
+
+      if (response.status === 401) {
+        return Response.json(
+          {
+            content:
+              "I'm sorry, but there's an authentication issue with the AI service. Please check the API key configuration.",
+          },
+          { status: 500 },
+        )
+      }
+
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -348,4 +377,99 @@ function analyzeResponseType(messages: any[]) {
   }
 
   return { isMinimal, type: responseType, originalMessage: lastMessage }
+}
+
+function generateFallbackResponse({ messages, emotionData, emotionHistory, personalContext, isInCrisisMode }: any) {
+  const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || ""
+  const responseType = analyzeResponseType(messages)
+  const personalInfo = extractPersonalInformation(messages, personalContext)
+
+  // Crisis mode responses
+  if (
+    isInCrisisMode ||
+    (emotionData && (emotionData.sadness >= 8 || emotionData.anger >= 8 || emotionData.fear >= 8))
+  ) {
+    const crisisResponses = [
+      "I can see you're going through a really difficult time right now. Your feelings are completely valid, and you don't have to face this alone. 💙",
+      "It sounds like you're experiencing intense emotions. That takes courage to share. Let's focus on getting through this moment together. 🤗",
+      "I hear that you're struggling, and I want you to know that reaching out shows incredible strength. You matter, and your feelings matter. ✨",
+    ]
+    return crisisResponses[Math.floor(Math.random() * crisisResponses.length)]
+  }
+
+  // Handle minimal responses
+  if (responseType.isMinimal) {
+    if (responseType.type === "dismissive") {
+      return "I sense you might be feeling overwhelmed or wanting some space. That's completely okay. I'm here whenever you're ready to share more. 💙"
+    } else if (responseType.type === "acknowledgment") {
+      return "I appreciate you staying with me in this conversation. Sometimes just being present is enough. How are you feeling in this moment? 🌟"
+    } else if (responseType.type === "uncertain") {
+      return "It's okay not to have all the answers right now. Uncertainty can feel uncomfortable, but it's also completely human. What feels most important to you today? 💭"
+    }
+  }
+
+  // Emotion-based responses
+  if (emotionData) {
+    const dominantEmotion = Object.entries(emotionData).reduce((a, b) =>
+      emotionData[a[0]] > emotionData[b[0]] ? a : b,
+    )[0]
+    const emotionLevel = emotionData[dominantEmotion]
+
+    if (dominantEmotion === "joy" && emotionLevel >= 6) {
+      const joyResponses = [
+        "I can feel the positive energy in your message! It's wonderful to see you experiencing joy. What's bringing you this happiness? ✨",
+        "Your joy is contagious! It's beautiful when we can recognize and celebrate these positive moments. 😊",
+        "I love hearing about the good things in your life. Joy is such a precious emotion - tell me more about what's making you feel this way! 🌟",
+      ]
+      return joyResponses[Math.floor(Math.random() * joyResponses.length)]
+    }
+
+    if (dominantEmotion === "sadness" && emotionLevel >= 5) {
+      const sadnessResponses = [
+        "I can sense the sadness you're carrying right now. It's okay to feel this way - sadness is a natural response to loss or disappointment. You're not alone. 💙",
+        "Your sadness is valid, and I'm here to listen. Sometimes we need to sit with these feelings before we can move through them. What's weighing on your heart? 🤗",
+        "I hear the pain in your words. Sadness can feel overwhelming, but it also shows how deeply you care. That's actually a beautiful thing about you. 💝",
+      ]
+      return sadnessResponses[Math.floor(Math.random() * sadnessResponses.length)]
+    }
+
+    if (dominantEmotion === "anger" && emotionLevel >= 5) {
+      const angerResponses = [
+        "I can feel the intensity of your anger. That energy shows you care deeply about something. What's stirring up these strong feelings? 🔥",
+        "Anger can be a powerful emotion that signals something important to us. It's okay to feel this way. What feels unfair or frustrating right now? 💪",
+        "Your anger is telling you something important. Let's explore what's behind these feelings - sometimes anger is protecting other emotions. 🛡️",
+      ]
+      return angerResponses[Math.floor(Math.random() * angerResponses.length)]
+    }
+
+    if (dominantEmotion === "fear" && emotionLevel >= 5) {
+      const fearResponses = [
+        "I can sense the fear you're experiencing. Fear often shows up when we're facing something uncertain or important to us. You're brave for acknowledging it. 🌟",
+        "Fear can feel overwhelming, but it also shows you're stepping outside your comfort zone. That takes courage. What's feeling scary right now? 💙",
+        "I hear the worry in your message. Fear is our mind's way of trying to protect us, but sometimes it can hold us back too. Let's explore this together. 🤗",
+      ]
+      return fearResponses[Math.floor(Math.random() * fearResponses.length)]
+    }
+  }
+
+  // Personalized responses based on context
+  if (personalInfo.name) {
+    const personalizedResponses = [
+      `${personalInfo.name}, I appreciate you sharing with me. Your openness helps me understand what you're going through. How can I best support you today? 💙`,
+      `Thank you for trusting me with your thoughts, ${personalInfo.name}. What's been on your mind lately? 🌟`,
+      `${personalInfo.name}, I'm here to listen and support you. What would be most helpful for you right now? ✨`,
+    ]
+    return personalizedResponses[Math.floor(Math.random() * personalizedResponses.length)]
+  }
+
+  // General supportive responses
+  const generalResponses = [
+    "Thank you for sharing with me. I'm here to listen and support you through whatever you're experiencing. What's on your mind today? 💙",
+    "I appreciate your openness in our conversation. Every feeling you have is valid and important. How are you taking care of yourself? 🌟",
+    "It means a lot that you're here talking with me. Sometimes just expressing our thoughts can be really helpful. What feels most important to you right now? ✨",
+    "I'm glad you reached out. Your willingness to explore your emotions shows real strength and self-awareness. What would you like to talk about? 🤗",
+    "Thank you for trusting me with your thoughts and feelings. I'm here to support you however I can. What's been weighing on your mind? 💝",
+  ]
+
+  return generalResponses[Math.floor(Math.random() * generalResponses.length)]
 }

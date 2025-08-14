@@ -10,75 +10,75 @@
 
 @layer base {
   :root {
-    /* Updated to a vibrant purple-teal color scheme that's visually appealing */
-    --background: 260 15% 85%;
-    --foreground: 260 25% 12%;
-    --card: 260 20% 88%;
-    --card-foreground: 260 25% 15%;
-    --popover: 260 20% 88%;
-    --popover-foreground: 260 25% 15%;
-    --primary: 280 85% 60%;
+    /* VexaEG brand-inspired light theme with cyan-purple gradients */
+    --background: 240 10% 95%;
+    --foreground: 240 15% 10%;
+    --card: 240 10% 98%;
+    --card-foreground: 240 15% 12%;
+    --popover: 240 10% 98%;
+    --popover-foreground: 240 15% 12%;
+    --primary: 280 100% 70%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 200 25% 75%;
-    --secondary-foreground: 260 25% 20%;
-    --muted: 240 15% 80%;
-    --muted-foreground: 260 20% 40%;
-    --accent: 180 40% 70%;
-    --accent-foreground: 260 25% 20%;
+    --secondary: 180 25% 85%;
+    --secondary-foreground: 240 15% 20%;
+    --muted: 240 10% 90%;
+    --muted-foreground: 240 15% 45%;
+    --accent: 180 60% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 20% 75%;
-    --input: 260 20% 75%;
-    --ring: 280 85% 60%;
-    --chart-1: 280 85% 60%;
-    --chart-2: 180 70% 50%;
-    --chart-3: 45 85% 65%;
-    --chart-4: 320 75% 65%;
-    --chart-5: 200 80% 55%;
-    --radius: 0.5rem;
-    --sidebar-background: 260 18% 86%;
-    --sidebar-foreground: 260 25% 15%;
-    --sidebar-primary: 280 85% 60%;
+    --border: 240 10% 85%;
+    --input: 240 10% 85%;
+    --ring: 280 100% 70%;
+    --chart-1: 280 100% 70%;
+    --chart-2: 180 100% 50%;
+    --chart-3: 320 100% 65%;
+    --chart-4: 200 100% 60%;
+    --chart-5: 45 100% 65%;
+    --radius: 0.75rem;
+    --sidebar-background: 240 10% 96%;
+    --sidebar-foreground: 240 15% 12%;
+    --sidebar-primary: 280 100% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 180 30% 78%;
-    --sidebar-accent-foreground: 260 25% 20%;
-    --sidebar-border: 260 20% 75%;
-    --sidebar-ring: 280 85% 60%;
+    --sidebar-accent: 180 30% 88%;
+    --sidebar-accent-foreground: 240 15% 20%;
+    --sidebar-border: 240 10% 85%;
+    --sidebar-ring: 280 100% 70%;
   }
   .dark {
-    /* Enhanced dark theme with richer colors */
-    --background: 260 15% 8%;
-    --foreground: 260 10% 95%;
-    --card: 260 15% 10%;
-    --card-foreground: 260 10% 95%;
-    --popover: 260 15% 10%;
-    --popover-foreground: 260 10% 95%;
-    --primary: 280 85% 65%;
-    --primary-foreground: 260 15% 8%;
-    --secondary: 260 15% 18%;
-    --secondary-foreground: 260 10% 90%;
-    --muted: 260 15% 18%;
-    --muted-foreground: 260 10% 65%;
-    --accent: 180 50% 45%;
-    --accent-foreground: 260 10% 95%;
+    /* VexaEG brand-inspired dark theme matching the logo aesthetic */
+    --background: 240 15% 6%;
+    --foreground: 180 20% 95%;
+    --card: 240 15% 8%;
+    --card-foreground: 180 15% 95%;
+    --popover: 240 15% 8%;
+    --popover-foreground: 180 15% 95%;
+    --primary: 280 100% 70%;
+    --primary-foreground: 240 15% 6%;
+    --secondary: 240 15% 12%;
+    --secondary-foreground: 180 15% 90%;
+    --muted: 240 15% 12%;
+    --muted-foreground: 180 10% 65%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 240 15% 6%;
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 15% 20%;
-    --input: 260 15% 20%;
-    --ring: 280 85% 65%;
-    --chart-1: 280 85% 65%;
-    --chart-2: 180 70% 55%;
-    --chart-3: 45 85% 70%;
-    --chart-4: 320 75% 70%;
-    --chart-5: 200 80% 60%;
-    --sidebar-background: 260 15% 9%;
-    --sidebar-foreground: 260 10% 90%;
-    --sidebar-primary: 280 85% 65%;
-    --sidebar-primary-foreground: 260 15% 8%;
-    --sidebar-accent: 260 15% 16%;
-    --sidebar-accent-foreground: 260 10% 85%;
-    --sidebar-border: 260 15% 18%;
-    --sidebar-ring: 280 85% 65%;
+    --border: 240 15% 15%;
+    --input: 240 15% 15%;
+    --ring: 280 100% 70%;
+    --chart-1: 280 100% 70%;
+    --chart-2: 180 100% 50%;
+    --chart-3: 320 100% 65%;
+    --chart-4: 200 100% 60%;
+    --chart-5: 45 100% 65%;
+    --sidebar-background: 240 15% 7%;
+    --sidebar-foreground: 180 15% 90%;
+    --sidebar-primary: 280 100% 70%;
+    --sidebar-primary-foreground: 240 15% 6%;
+    --sidebar-accent: 240 15% 10%;
+    --sidebar-accent-foreground: 180 15% 85%;
+    --sidebar-border: 240 15% 12%;
+    --sidebar-ring: 280 100% 70%;
   }
 }
 
@@ -88,5 +88,37 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* VexaEG brand gradient utilities */
+@layer utilities {
+  .gradient-vexaeg {
+    background: linear-gradient(135deg, #00ffff 0%, #8b5cf6 50%, #ff00ff 100%);
+  }
+  .gradient-vexaeg-text {
+    background: linear-gradient(135deg, #00ffff 0%, #8b5cf6 50%, #ff00ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Added hero section animations for the geometric logo */
+  .animate-spin-slow {
+    animation: spin 20s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Smooth scrolling for the entire page */
+  html {
+    scroll-behavior: smooth;
   }
 }
